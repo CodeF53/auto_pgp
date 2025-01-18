@@ -1,0 +1,17 @@
+name: Publish compiled packages
+on: [push]
+jobs:
+
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: oven-sh/setup-bun@v2
+      - run: bun i
+      - run: bun build ./index.ts --compile --minify --target=bun-linux-x64-modern --outfile autopgp-linux
+      - run: bun build ./index.ts --compile --minify --target=bun-windows-x64-modern --outfile autopgp-windows.exe
+      - name: Release
+        uses: softprops/action-gh-release@v2.2.1
+        with:
+          files: |
+            autopgp-linux
+            autopgp-windows.exe
