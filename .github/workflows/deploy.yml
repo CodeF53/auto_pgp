@@ -20,7 +20,7 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v2.2.1
         with:
-          tag_name:
+          tag_name: v1.0.${{ github.run_number }}
           files: |
             autopgp-linux
             autopgp-windows.exe
