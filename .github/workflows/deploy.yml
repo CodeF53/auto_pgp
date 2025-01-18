@@ -4,15 +4,14 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@v4
       - name: Create tag
         id: create_tag
         run: |
-            tag_name="v1.0.${{ github.run_number }}"
-            git tag $tag_name
-            git push origin $tag_name
-            
-      - uses: oven-sh/setup-bun@v2
-      - uses: actions/checkout@v4
+          tag_name="v1.0.${{ github.run_number }}"
+          git tag $tag_name
+          git push origin $tag_name
       - run: bun i
       - run: bun build ./index.ts --compile --minify --target=bun-linux-x64-modern --outfile autopgp-linux
       - run: bun build ./index.ts --compile --minify --target=bun-windows-x64-modern --outfile autopgp-windows.exe
