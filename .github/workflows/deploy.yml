@@ -6,6 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@v4
       - run: bun i
       - run: bun build ./index.ts --compile --minify --target=bun-linux-x64-modern --outfile autopgp-linux
       - run: bun build ./index.ts --compile --minify --target=bun-windows-x64-modern --outfile autopgp-windows.exe
