@@ -1,12 +1,16 @@
 name: Publish compiled packages
-on:
-  push:
-    tags:
-      - "v*.*.*"
+on: [push]
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Create tag
+        id: create_tag
+        run: |
+            tag_name="v1.0.${{ github.run_number }}"
+            git tag $tag_name
+            git push origin $tag_name
+            
       - uses: oven-sh/setup-bun@v2
       - uses: actions/checkout@v4
       - run: bun i
