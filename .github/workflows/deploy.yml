@@ -24,16 +24,16 @@ jobs:
         env:
           GOOS: linux
           GOARCH: amd64
-        run: go build -o auto_pgp
+        run: go build -o autopgp-linux
       - name: compile-win
         env:
           GOOS: windows
           GOARCH: amd64
-        run: go build -o auto_pgp.exe
+        run: go build -o autopgp-win.exe
       - name: release
         uses: softprops/action-gh-release@v2.2.1
         with:
           tag_name: v1.0.${{ github.run_number }}
           files: |
-            auto_pgp
-            auto_pgp.exe
+            autopgp-win.exe
+            autopgp-linux
