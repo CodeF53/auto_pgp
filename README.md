@@ -15,3 +15,6 @@ All this does is:
 3. Decode clipboard using pgp key
 4. Use regex to find login key
 5. Send that key to your clipboard
+
+## how compile?!?!?
+read [the release workflow](https://github.com/CodeF53/auto_pgp/blob/master/.github/workflows/deploy.yml)
