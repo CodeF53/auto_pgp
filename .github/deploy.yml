@@ -1,0 +1,39 @@
+name: compile
+on: [push]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: create tag
+        id: create_tag
+        run: |
+          tag_name="v1.0.${{ github.run_number }}"
+          git tag $tag_name
+          git push origin $tag_name
+      - name: go setup
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.23.6
+      - name: install deps
+        run: go get .
+      - name: compile-linux
+        env:
+          GOOS: linux
+          GOARCH: amd64
+        run: go build -o auto_pgp
+      - name: compile-win
+        env:
+          GOOS: windows
+          GOARCH: amd64
+        run: go build -o auto_pgp.exe
+      - name: release
+        uses: softprops/action-gh-release@v2.2.1
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          files: |
+            auto_pgp
+            auto_pgp.exe

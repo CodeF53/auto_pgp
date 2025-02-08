@@ -26,7 +26,7 @@ func main() {
 	decHandler, err := pgp.Decryption().DecryptionKey(privKey).New()
 	if err != nil { log.Fatal(err) }
 	decrypted, err := decHandler.Decrypt([]byte(clipContents), crypto.Auto)
-	if err != nil { log.Fatal("Decryption failed, are you using the correct key?") }
+	if err != nil { log.Fatal("Decryption failed, is the message in your clipboard correct?") }
 
 	regex := regexp.MustCompile(`[0-9a-f]{56}`)
 	final := regex.FindString(string(decrypted.Bytes()[:]))
