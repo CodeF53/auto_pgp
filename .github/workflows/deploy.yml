@@ -3,6 +3,7 @@ on: [push]
 
 jobs:
   deploy:
+    if: ${{ startsWith(github.event.head_commit.message, 'r:') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -11,7 +12,7 @@ jobs:
       - name: create tag
         id: create_tag
         run: |
-          tag_name="v1.0.${{ github.run_number }}"
+          tag_name="v2.${{ github.run_number }}"
           git tag $tag_name
           git push origin $tag_name
       - name: go setup
