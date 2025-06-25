@@ -1,9 +1,14 @@
 name: compile
-on: [push]
+on:
+  workflow_dispatch:
+    inputs:
+      versionNumber:
+        description: "Version number to use in tag"
+        required: true
+        type: string
 
 jobs:
   deploy:
-    if: ${{ startsWith(github.event.head_commit.message, 'r:') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -12,29 +17,31 @@ jobs:
       - name: create tag
         id: create_tag
         run: |
-          tag_name="v2.${{ github.run_number }}"
+          tag_name=${{ inputs.versionNumber }}
           git tag $tag_name
           git push origin $tag_name
       - name: go setup
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: 1.23.6
+          go-version: 1.24.4
       - name: install deps
         run: go get .
       - name: compile-linux
         env:
           GOOS: linux
           GOARCH: amd64
-        run: go build -o autopgp-linux
+          GOAMD64: v3
+        run: go build -ldflags "-s -w" -o autopgp
       - name: compile-win
         env:
           GOOS: windows
           GOARCH: amd64
-        run: go build -o autopgp-win.exe
+          GOAMD64: v3
+        run: go build -ldflags "-s -w" -o autopgp.exe
       - name: release
-        uses: softprops/action-gh-release@v2.2.1
+        uses: softprops/action-gh-release@v2.3.2
         with:
-          tag_name: v1.0.${{ github.run_number }}
+          tag_name: ${{ inputs.versionNumber }}
           files: |
-            autopgp-win.exe
-            autopgp-linux
+            autopgp.exe
+            autopgp
