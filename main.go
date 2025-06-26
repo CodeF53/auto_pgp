@@ -1,33 +1,45 @@
 package main
 
 import (
+	"bufio"
+	"flag"
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
-	"regexp"
-
-	clipboard "github.com/tiagomelo/go-clipboard/clipboard"
-	"golang.org/x/crypto/openpgp"
-	"golang.org/x/crypto/openpgp/armor"
+	"github.com/ProtonMail/go-crypto/openpgp"
+	"github.com/ProtonMail/go-crypto/openpgp/armor"
+	"github.com/atotto/clipboard"
 )
 
+var pathToKey string
+var toStdout bool
+
+func init() {
+	flag.StringVar(&pathToKey, "key", "private_key.asc", "Path to private key")
+	flag.BoolVar(&toStdout, "o", false, "Print output to stdout instead of copying to clipboard")
+}
+
 func main() {
-	keyReader, err := os.Open("private_key.asc")
-	if err != nil { errHandle("Failed to read private_key.asc, does it exist?") }
+	flag.Parse()
+
+	keyReader, err := os.Open(pathToKey)
+	if err != nil { errHandle(fmt.Sprintf("Failed to read %s, does it exist?", pathToKey)) }
 	defer keyReader.Close()
 
 	keyring, err := openpgp.ReadArmoredKeyRing(keyReader)
-	if err != nil { errHandle("Invalid key in priv.asc") }
+	if err != nil { errHandle(fmt.Sprintf("%v %s\n\n", err.Error(), pathToKey)) }
 
 	if keyring[0].PrivateKey.Encrypted {
 		for {
-			fmt.Print("Input password for private key:")
-			var input string
-			fmt.Scanln(input)
-			if err := keyring[0].PrivateKey.Decrypt([]byte(input)); err == nil {
+			fmt.Print("\nInput password for private key: ")
+			stdinScanner := bufio.NewScanner(os.Stdin)
+			stdinScanner.Scan()
+			input := stdinScanner.Bytes()
+			if err := keyring[0].PrivateKey.Decrypt(input); err == nil {
 				fmt.Println("")
 				break
 			}
@@ -35,15 +47,14 @@ func main() {
 		}
 	}
 
-	clip := clipboard.New()
-	clipContents, err := clip.PasteText()
+	clipContents, err := clipboard.ReadAll()
 	if err != nil { errHandle("Failed to read clipboard") }
 
 	armoredMessage, err := armor.Decode(strings.NewReader(clipContents))
-	if err != nil { errHandle(err.Error()) }
+	if err != nil { errHandle("Invalid message in clipboard. Make sure ASCII armor (-----BEGIN/END PGP MESSAGE-----) is correct") }
 
 	messageReader, err := openpgp.ReadMessage(armoredMessage.Body, keyring, nil, nil)
-	if err != nil { errHandle(err.Error()) }
+	if err != nil { errHandle("Failed to read message, is the key correct?") }
 
 	message, _ := io.ReadAll(messageReader.UnverifiedBody)
 
@@ -51,14 +62,14 @@ func main() {
 	final := regex.Find(message)
 	if final == nil { errHandle("Message did not contain an abacus verification key") }
 
-	clip.CopyText(string(final))
+	clipboard.WriteAll(string(final))
 	fmt.Println("\033[32mKey copied to clipboard!\033[0m")
 	time.Sleep(2 * time.Second)
 	os.Exit(0)
 }
 
 func errHandle(message string) {
-	fmt.Println("\033[31mError: ", message, "\033[0m")
+	fmt.Printf("\033[31mError: %s\033[0m\n", message)
 	time.Sleep(3 * time.Second)
 	os.Exit(1)
 }
