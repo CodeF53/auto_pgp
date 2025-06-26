@@ -31,15 +31,15 @@ func main() {
 	defer keyReader.Close()
 
 	keyring, err := openpgp.ReadArmoredKeyRing(keyReader)
-	if err != nil { errHandle(fmt.Sprintf("%v %s\n\n", err.Error(), pathToKey)) }
+	if err != nil { errHandle(fmt.Sprintf("No valid keys found in %s", pathToKey)) }
 
-	if keyring[0].PrivateKey.Encrypted {
+	if decKey := keyring.DecryptionKeys()[0].PrivateKey; decKey.Encrypted{
 		for {
 			fmt.Print("\nInput password for private key: ")
 			stdinScanner := bufio.NewScanner(os.Stdin)
 			stdinScanner.Scan()
 			input := stdinScanner.Bytes()
-			if err := keyring[0].PrivateKey.Decrypt(input); err == nil {
+			if err := decKey.Decrypt(input); err == nil {
 				fmt.Println("")
 				break
 			}
